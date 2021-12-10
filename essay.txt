@@ -1,0 +1,5 @@
+LINK: https://github.com/vuolen/cybersecproject
+Have Django installed. Run `python manage.py runserver`
+
+FLAW 1:
+
