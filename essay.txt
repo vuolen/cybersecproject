@@ -6,3 +6,15 @@ settings.py PASSWORD_HASHERS
 The website stores users' passwords without hashing them, in plain text. This is mentioned in the OWASP Top 10 under "AO2:2021 - Cryptographic failures". In the event of a database leak, all the users' passwords are compromised. This allows for attacks on other services they might be using the same password on.
 This can be fixed by removing the variable PASSWORD_HASHERS from settings.py, and removing the hash.py file altogether. Most modern frameworks, like Django, hash passwords by default. In this case it required effort to implement this flaw.
 
+FLAW 2:
+home.html |safe
+The website does not sanitize the welcome message specified by the user. This means that the message can contain html that is then included in to the website, allowing for malicious payloads in the message. For example by using the <script> tag a user can run arbitrary Javascript on another user's machine whenever the latter user visits the former's homepage. An attack like this is described in the OWASP Top 10 under "A03:2021 – Injection".
+This can be fixed by removing the "safe" filter from the file home.html. Removing the "safe" filter sanitizes the message before including it into the html, which means that any html in the message is displayed as text, instead of being treated like actual html. Thankfully, Django does this sanitization by default, requiring the developer to explicitly use the "safe" filter.
+
+FLAW 3:
+views.py csrf_exempt
+The website does not protect against csrf attacks on the homepage endpoint. This means that a request forged by an attacker will be accepted if the user is logged in. A POST request to the endpoint could then modify the user's welcome message. This could be combined with the arbitrary Javascript injection attack mentioned before, allowing for a self-replicating "virus" that spreads itself to the welcome message of every user that visits an infected homepage. This kind of attack is mentioned in the OWASP Top 10 under "A01:2021 – Broken Access Control".
+This can be fixed by removing the "csrf_exempt" decorator. This makes it so that a csrf token is required in every POST request to the endpoint. This csrf token is tied to the users session and changes from time to time. The attacker could get hold of the csrf token some other way of course, but using a token is better than not.
+
+
+<form id="form" method="POST" action="user" onLoad="document.getElementById(\"form\").submit()"><input name="welcome_message" value="Pwned!"></input></form>

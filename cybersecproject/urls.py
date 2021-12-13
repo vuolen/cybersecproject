@@ -18,6 +18,8 @@ from django.urls import path
 from cybersecproject import views
 
 urlpatterns = [
+    path('user/<username>', views.homepage, name='homepage'),
     path('login', views.login, name='login'),
     path('admin/', admin.site.urls),
+    path('', views.index, name="index")
 ]

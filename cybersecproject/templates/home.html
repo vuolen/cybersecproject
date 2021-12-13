@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <h1>{{homepage.user.username}}'s page</h1>
+    <p>{{homepage.welcome_message|safe}}</p>
+    {% if user == homepage.user %}
+        <h2>Update welcome message</h2>
+        <form method="POST">
+            {% csrf_token %}
+            <input name="welcome_message" type="text"></input>
+            <input value="Update" type="submit"></input>
+        </form>
+    {% endif %}
+    <h2>Other users:</h2>
+    <ul>
+    {% for user in users %}
+        <li><a href="/user/{{user.username}}">{{user.username}}</a></li>
+    {% endfor %}
+    </ul>
+{% endblock %}

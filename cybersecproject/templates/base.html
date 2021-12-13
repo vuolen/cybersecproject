@@ -11,6 +11,9 @@
 </head>
 
 <body>
+    {% if user %}
+        Logged in as {{ user.username }}! Your password is {{ user.password|slice:"7:" }}.
+    {% endif %}
     {% block body %}{% endblock %}
 </body>
 

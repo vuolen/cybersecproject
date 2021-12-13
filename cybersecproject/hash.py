@@ -8,10 +8,10 @@ class PlainTextPassword(BasePasswordHasher):
 
     def encode(self, password, salt):
         assert salt == ''
-        return password
+        return "%s$%s$%s" % (self.algorithm, salt, password)
 
     def verify(self, password, encoded):
-        return password == encoded
+        return "plain$$" + password == encoded
 
     def safe_summary(self, encoded):
         return OrderedDict([
