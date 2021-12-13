@@ -54,7 +54,7 @@ ROOT_URLCONF = 'cybersecproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'cybersecproject/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -66,6 +66,8 @@ TEMPLATES = [
         },
     },
 ]
+
+TEMPLATE_DIRS = [TEMPLATES]
 
 WSGI_APPLICATION = 'cybersecproject.wsgi.application'
 
@@ -98,6 +100,8 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+PASSWORD_HASHERS = ["cybersecproject.hash.PlainTextPassword"]
 
 
 # Internationalization
