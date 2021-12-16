@@ -3,8 +3,8 @@ Have Django installed. Run `python manage.py runserver`
 
 FLAW 1:
 settings.py PASSWORD_HASHERS
-The website stores users' passwords without hashing them, in plain text. This is mentioned in the OWASP Top 10 under "AO2:2021 - Cryptographic failures". In the event of a database leak, all the users' passwords are compromised. This allows for attacks on other services they might be using the same password on.
-This can be fixed by removing the variable PASSWORD_HASHERS from settings.py, and removing the hash.py file altogether. Most modern frameworks, like Django, hash passwords by default. In this case it required effort to implement this flaw.
+The website stores users' passwords without hashing them, in plain text. It is mentioned in the OWASP Top 10 under "AO2:2021 - Cryptographic failures". In the event of a database leak or any such attack, all the users' passwords are compromised. This gives the attacker access to every account on the website, also allowing for attacks on other services the user might be using the same password on. Even though users are instructed not to reuse the same password, it happens quite often.
+This can be fixed by modifying the variable PASSWORD_HASHERS in settings.py, and removing the hash.py file altogether. Most modern frameworks, like Django, hash passwords with more secure algorithms by default. In this case it required effort to implement this flaw. A good, or at least often used, algorithms for hashing passwords is PBKDF2.
 
 FLAW 2:
 home.html |safe
@@ -16,5 +16,9 @@ views.py csrf_exempt
 The website does not protect against csrf attacks on the homepage endpoint. This means that a request forged by an attacker will be accepted if the user is logged in. A POST request to the endpoint could then modify the user's welcome message. This could be combined with the arbitrary Javascript injection attack mentioned before, allowing for a self-replicating "virus" that spreads itself to the welcome message of every user that visits an infected homepage. This kind of attack is mentioned in the OWASP Top 10 under "A01:2021 – Broken Access Control".
 This can be fixed by removing the "csrf_exempt" decorator. This makes it so that a csrf token is required in every POST request to the endpoint. This csrf token is tied to the users session and changes from time to time. The attacker could get hold of the csrf token some other way of course, but using a token is better than not.
 
+FLAW 4:
+settings.py AUTH_PASSWORD_VALIDATORS
+The website does not prevent creating users with insecure passwords. This leads to passwords that are easily guessed or brute forced. By default Django chooses to not allow passwords that are too similar to the username, too short, too commonly used, or consist of only numbers. More validations could be added, but these provide a good baseline. 
+As the setting is commented out, none of these validators are in use currently. To fix this the lines should be uncommented, and perhaps more validations added.
 
 <form id="form" method="POST" action="user" onLoad="document.getElementById(\"form\").submit()"><input name="welcome_message" value="Pwned!"></input></form>
