@@ -2,23 +2,27 @@ LINK: https://github.com/vuolen/cybersecproject
 Have Django installed. Run `python manage.py runserver`
 
 FLAW 1:
-settings.py PASSWORD_HASHERS
-The website stores users' passwords without hashing them, in plain text. It is mentioned in the OWASP Top 10 under "AO2:2021 - Cryptographic failures". In the event of a database leak or any such attack, all the users' passwords are compromised. This gives the attacker access to every account on the website, also allowing for attacks on other services the user might be using the same password on. Even though users are instructed not to reuse the same password, it happens quite often.
-This can be fixed by modifying the variable PASSWORD_HASHERS in settings.py, and removing the hash.py file altogether. Most modern frameworks, like Django, hash passwords with more secure algorithms by default. In this case it required effort to implement this flaw. A good, or at least often used, algorithms for hashing passwords is PBKDF2.
+https://github.com/vuolen/cybersecproject/blob/main/cybersecproject/settings.py#L105
+The website stores users' passwords without hashing them, in plain text. It is mentioned in the OWASP Top 10 under "AO2:2021 - Cryptographic failures". In the event of a database leak or any such attack, all the users' passwords are compromised. This gives the attacker access to every account on the website, also allowing for attacks on other services the user might be using the same password on. Even though users are instructed not to reuse the same password, it happens quite often. 
+This can be fixed by modifying the variable PASSWORD_HASHERS in settings.py, and removing the hash.py file altogether. Most modern frameworks, like Django, hash passwords with more secure algorithms by default. In this case it required effort to implement this flaw. A good, or at least often used, algorithms for hashing passwords is PBKDF2. In addition to hashing, it is important to salt the password, which is to attach some string to the plain text password and then encrypt the salted string. The salt is then stored with the hashed password. This is to prevent attacks with rainbow tables, which are precomputed tables of common passwords using some common hashing algorithm. Unsalted passwords also allow the attacker to crack one password, then check if other users have the same hash. The cracked password works for the other users too.
 
 FLAW 2:
-home.html |safe
+https://github.com/vuolen/cybersecproject/blob/main/cybersecproject/templates/home.html#L5
 The website does not sanitize the welcome message specified by the user. This means that the message can contain html that is then included in to the website, allowing for malicious payloads in the message. For example by using the <script> tag a user can run arbitrary Javascript on another user's machine whenever the latter user visits the former's homepage. An attack like this is described in the OWASP Top 10 under "A03:2021 – Injection".
 This can be fixed by removing the "safe" filter from the file home.html. Removing the "safe" filter sanitizes the message before including it into the html, which means that any html in the message is displayed as text, instead of being treated like actual html. Thankfully, Django does this sanitization by default, requiring the developer to explicitly use the "safe" filter.
 
 FLAW 3:
-views.py csrf_exempt
+https://github.com/vuolen/cybersecproject/blob/main/cybersecproject/views.py#L22
 The website does not protect against csrf attacks on the homepage endpoint. This means that a request forged by an attacker will be accepted if the user is logged in. A POST request to the endpoint could then modify the user's welcome message. This could be combined with the arbitrary Javascript injection attack mentioned before, allowing for a self-replicating "virus" that spreads itself to the welcome message of every user that visits an infected homepage. This kind of attack is mentioned in the OWASP Top 10 under "A01:2021 – Broken Access Control".
 This can be fixed by removing the "csrf_exempt" decorator. This makes it so that a csrf token is required in every POST request to the endpoint. This csrf token is tied to the users session and changes from time to time. The attacker could get hold of the csrf token some other way of course, but using a token is better than not.
 
+<form id="form" method="POST" action="user" onLoad="document.getElementById(\"form\").submit()"><input name="welcome_message" value="Pwned!"></input></form>
+
 FLAW 4:
-settings.py AUTH_PASSWORD_VALIDATORS
+https://github.com/vuolen/cybersecproject/blob/main/cybersecproject/settings.py#L90
 The website does not prevent creating users with insecure passwords. This leads to passwords that are easily guessed or brute forced. By default Django chooses to not allow passwords that are too similar to the username, too short, too commonly used, or consist of only numbers. More validations could be added, but these provide a good baseline. 
 As the setting is commented out, none of these validators are in use currently. To fix this the lines should be uncommented, and perhaps more validations added.
 
-<form id="form" method="POST" action="user" onLoad="document.getElementById(\"form\").submit()"><input name="welcome_message" value="Pwned!"></input></form>
+FLAW 5:
+The website does not have a production-suitable set up. The only way to run it is by using python manage.py runserver, which is not secure in production. For example if any view throws an exception, the stack trace is showed to the user. This gives some insight into inner workings of the server to potential attackers, which can lead to other attacks. The development server is also not optimized, which makes denial-of-service attacks easier. The server also reloads any modified python code, so if an attacker can modify a source file, they can modify the running server as well. The server is also not audited for other security issues, so it might be a target for attacks. 
+This can be fixed by running the code with a wsgi or asgi compatible webserver, like Gunicorn. Django only provides the framework for web applications, not the actual server running it. Install gunicorn and run gunicorn cybersecproject.wsgi to run a server suitable for production.
